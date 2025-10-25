@@ -1,9 +1,9 @@
 const { execSync } = require('child_process');
 
-const dbName = 'form_submissions';
+const dbName = 'test_db';
 const tableName = 'submissions';
-const containerName = 'some-postgres';
-const user = 'postgres';
+const containerName = 'container-pg';
+const user = 'admin';
 
 console.log('Setting up the database...');
 

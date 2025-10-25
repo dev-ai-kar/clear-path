@@ -2,29 +2,26 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useState } from 'react';
 import { StyleSheet, TextInput, Button, Alert } from 'react-native';
+import { supabase } from '@/lib/supabase';
 
 export default function FormScreen() {
   const [name, setName] = useState('');
 
   const handleSubmit = async () => {
-    try {
-      const response = await fetch('http://localhost:3001/api/submissions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name }),
-      });
+    if (!name.trim()) {
+      Alert.alert('Error', 'Please enter a name.');
+      return;
+    }
 
-      if (response.ok) {
-        Alert.alert('Success', 'Your name has been submitted.');
-        setName('');
-      } else {
-        Alert.alert('Error', 'Failed to submit your name.');
-      }
-    } catch (error) {
-      console.error(error);
-      Alert.alert('Error', 'An error occurred while submitting your name.');
+    const { data, error } = await supabase
+      .from('submissions')
+      .insert([{ name: name.trim() }]);
+
+    if (error) {
+      Alert.alert('Error', error.message);
+    } else {
+      Alert.alert('Success', 'Your name has been submitted.');
+      setName('');
     }
   };
 

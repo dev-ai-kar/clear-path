@@ -6,9 +6,26 @@ import { StyleSheet, TextInput, Button, Alert } from 'react-native';
 export default function FormScreen() {
   const [name, setName] = useState('');
 
-  const handleSubmit = () => {
-    Alert.alert('Form Submitted', `Name: ${name}`);
-    // Here we would typically send the data to a backend server
+  const handleSubmit = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/api/submissions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name }),
+      });
+
+      if (response.ok) {
+        Alert.alert('Success', 'Your name has been submitted.');
+        setName('');
+      } else {
+        Alert.alert('Error', 'Failed to submit your name.');
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', 'An error occurred while submitting your name.');
+    }
   };
 
   return (

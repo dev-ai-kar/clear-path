@@ -1,0 +1,25 @@
+{
+  "name": "clear_path_eye",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix backend\" \"npm start --prefix clear-path\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dev-ai-kar/clear-path.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/dev-ai-kar/clear-path/issues"
+  },
+  "homepage": "https://github.com/dev-ai-kar/clear-path#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

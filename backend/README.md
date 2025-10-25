@@ -46,6 +46,21 @@ docker run -d --name some-postgres \
 
 ---
 
+### 4. Set Up the Database Schema
+
+Once the container is running, you can set up the necessary database and table by running the setup script. This only needs to be done once.
+
+From within the `backend` directory, run:
+```bash
+npm run db:setup
+```
+
+This command will:
+- Create the `form_submissions` database if it doesn't already exist.
+- Create the `submissions` table within the database.
+
+---
+
 ### Common Management Commands
 
 Here are the commands you'll need to manage your new container:

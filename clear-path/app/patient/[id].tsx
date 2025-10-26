@@ -1,7 +1,7 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ActivityIndicator, Image, ScrollView } from 'react-native';
-import { Text, Button, List, Title } from 'react-native-paper';
+import { View, StyleSheet, ActivityIndicator, Image, ScrollView, Linking } from 'react-native';
+import { Text, Button, List, Title, Divider } from 'react-native-paper';
 import { supabase } from '@/lib/supabase';
 import { useTheme } from '@/contexts/theme-context';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
@@ -30,7 +30,7 @@ export default function PatientDetailScreen() {
 
       const { data: visitsData, error: visitsError } = await supabase
         .from('visits')
-        .select('*, screenings(*)')
+        .select('*, screenings(*), visit_diagnoses(diagnoses(name))')
         .eq('patient_id', id);
 
       if (visitsError) {
@@ -92,14 +92,28 @@ export default function PatientDetailScreen() {
                 title={`Visit on ${new Date(visit.visit_date).toLocaleDateString()}`}
                 id={visit.visit_id}
               >
-                {Array.isArray(visit.screenings) && visit.screenings.length > 0 ? (
-                  visit.screenings.map((screening: any) => (
-                    <View key={screening.screening_id} style={styles.screeningContainer}>
-                      <Text>VA: {screening.va_left_distance_sc} / {screening.va_right_distance_sc}</Text>
-                      <Text>IOP: {screening.iop_left} / {screening.iop_right}</Text>
-                      <Text>CDR: {screening.cdr_left} / {screening.cdr_right}</Text>
-                    </View>
-                  ))
+                {visit.screenings ? (
+                  <View style={styles.screeningContainer}>
+                    <Title>Screening Details</Title>
+                    <Text>VA (SC): {visit.screenings.va_left_distance_sc} / {visit.screenings.va_right_distance_sc}</Text>
+                    <Text>VA (CC): {visit.screenings.va_left_distance_cc} / {visit.screenings.va_right_distance_cc}</Text>
+                    <Text>IOP: {visit.screenings.iop_left} / {visit.screenings.iop_right}</Text>
+                    <Text>CDR: {visit.screenings.cdr_left} / {visit.screenings.cdr_right}</Text>
+                    <Divider style={styles.divider} />
+                    <Title>Segment Status</Title>
+                    <Text>Lens: {visit.screenings.lens_left} / {visit.screenings.lens_right}</Text>
+                    <Text>Cornea: {visit.screenings.cornea_left} / {visit.screenings.cornea_right}</Text>
+                    <Text>Retina: {visit.screenings.retina_left} / {visit.screenings.retina_right}</Text>
+                    <Divider style={styles.divider} />
+                    <Title>Diagnoses</Title>
+                    {visit.visit_diagnoses.map((diag: any) => (
+                      <Text key={diag.diagnoses.name}>{diag.diagnoses.name}</Text>
+                    ))}
+                    {visit.other_diagnoses ? <Text>Other: {visit.other_diagnoses}</Text> : null}
+                    <Divider style={styles.divider} />
+                    <Title>Notes</Title>
+                    <Text>{visit.notes}</Text>
+                  </View>
                 ) : (
                   <Text style={styles.screeningContainer}>No screening data for this visit.</Text>
                 )}
@@ -137,5 +151,8 @@ const styles = StyleSheet.create({
   },
   screeningContainer: {
     padding: 16,
+  },
+  divider: {
+    marginVertical: 10,
   },
 });

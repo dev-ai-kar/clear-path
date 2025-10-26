@@ -1,7 +1,9 @@
+
 import React, { useState } from 'react';
-import { StyleSheet, Alert, ScrollView, Modal, View } from 'react-native';
+import { StyleSheet, Alert, ScrollView, Modal, View, Platform } from 'react-native';
 import { supabase } from '@/lib/supabase';
-import { TextInput, Button, Text } from 'react-native-paper';
+import { Picker } from '@react-native-picker/picker';
+import { TextInput, Button, Text, TouchableRipple, Icon } from 'react-native-paper';
 import { useTheme } from '@/contexts/theme-context';
 import CameraComponent from '@/components/camera-view';
 import Avatar from '@/components/avatar';
@@ -15,6 +17,8 @@ export default function FormScreen() {
   const [gender, setGender] = useState('');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [cameraVisible, setCameraVisible] = useState(false);
+  const [pickerVisible, setPickerVisible] = useState(false);
+  const [tempGender, setTempGender] = useState(gender);
   const { theme } = useTheme();
 
   const handlePictureTaken = async (uri: string) => {
@@ -122,13 +126,62 @@ export default function FormScreen() {
         mode="outlined"
         keyboardType="number-pad"
       />
-      <TextInput
-        label="Gender"
-        value={gender}
-        onChangeText={setGender}
-        style={styles.input}
-        mode="outlined"
-      />
+      {Platform.OS === 'ios' ? (
+        <>
+          <TouchableRipple onPress={() => setPickerVisible(true)}>
+            <View style={[styles.input, styles.pickerContainer, { borderColor: theme.colors.outline }]}>
+              <Text style={{ color: gender ? theme.colors.onSurface : theme.colors.onSurfaceVariant, flex: 1 }}>
+                {gender || 'Select Gender...'}
+              </Text>
+              <Icon source="chevron-down" size={24} color={theme.colors.onSurfaceVariant} />
+            </View>
+          </TouchableRipple>
+          <Modal
+            visible={pickerVisible}
+            transparent={true}
+            animationType="slide"
+            onRequestClose={() => setPickerVisible(false)}
+          >
+            <View style={styles.modalContainer}>
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                  <Button onPress={() => setPickerVisible(false)}>Cancel</Button>
+                  <Button onPress={() => {
+                    setGender(tempGender);
+                    setPickerVisible(false);
+                  }}>Done</Button>
+                </View>
+                <Picker
+                  selectedValue={tempGender}
+                  onValueChange={(itemValue) => setTempGender(itemValue)}
+                >
+                  <Picker.Item label="Select Gender..." value="" color="#8e8e93" />
+                  <Picker.Item label="Male" value="Male" color="black" />
+                  <Picker.Item label="Female" value="Female" color="black" />
+                  <Picker.Item label="Non-binary" value="Non-binary" color="black" />
+                  <Picker.Item label="Prefer not to say" value="Prefer not to say" color="black" />
+                  <Picker.Item label="Other" value="Other" color="black" />
+                </Picker>
+              </View>
+            </View>
+          </Modal>
+        </>
+      ) : (
+        <View style={[styles.input, styles.pickerContainer, { borderColor: theme.colors.outline }]}>
+          <Picker
+            selectedValue={gender}
+            onValueChange={(itemValue: string) => setGender(itemValue)}
+            style={{ flex: 1 }}
+          >
+            <Picker.Item label="Select Gender..." value="" />
+            <Picker.Item label="Male" value="Male" />
+            <Picker.Item label="Female" value="Female" />
+            <Picker.Item label="Non-binary" value="Non-binary" />
+            <Picker.Item label="Prefer not to say" value="Prefer not to say" />
+            <Picker.Item label="Other" value="Other" />
+          </Picker>
+        </View>
+      )}
       <Button mode="contained" onPress={handleSubmit} style={styles.button}>
         Submit
       </Button>
@@ -151,6 +204,32 @@ const styles = StyleSheet.create({
   },
   input: {
     marginBottom: 20,
+  },
+  pickerContainer: {
+    borderWidth: 1,
+    borderRadius: 4,
+    justifyContent: 'center',
+    height: 56, // Standard height for outlined TextInput
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingBottom: 10,
   },
   button: {
     marginTop: 10,

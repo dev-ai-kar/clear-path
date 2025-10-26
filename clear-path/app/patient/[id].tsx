@@ -1,7 +1,7 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, ActivityIndicator, Image, ScrollView, Linking } from 'react-native';
-import { Text, Button, List, Title, Divider } from 'react-native-paper';
+import { Text, Button, List, Title, Divider, Card } from 'react-native-paper';
 import { supabase } from '@/lib/supabase';
 import { useTheme } from '@/contexts/theme-context';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
@@ -70,8 +70,9 @@ export default function PatientDetailScreen() {
         headerBackgroundColor={{ light: theme.colors.surface, dark: theme.colors.surface }}
         headerImage={<Image source={{ uri: patient.portrait_url }} style={styles.headerImage} />}
       >
-        <View style={styles.contentContainer}>
-          <Text variant="headlineLarge" style={[styles.name, { color: theme.colors.onSurface }]}>{`${patient.first_name} ${patient.last_name}`}</Text>
+        <Card style={styles.card}>
+          <Card.Content>
+            <Text variant="headlineLarge" style={[styles.name, { color: theme.colors.onSurface }]}>{`${patient.first_name} ${patient.last_name}`}</Text>
           <Text variant="titleMedium" style={{ color: theme.colors.onSurface }}>Phone: {patient.phone}</Text>
           <Text variant="titleMedium" style={{ color: theme.colors.onSurface }}>Age: {patient.age}</Text>
           <Text variant="titleMedium" style={{ color: theme.colors.onSurface }}>Gender: {patient.gender}</Text>
@@ -134,7 +135,8 @@ export default function PatientDetailScreen() {
           ) : (
             <Text style={{ marginTop: 10 }}>No screening history found.</Text>
           )}
-        </View>
+          </Card.Content>
+        </Card>
       </ParallaxScrollView>
     </>
   );
@@ -165,5 +167,8 @@ const styles = StyleSheet.create({
   },
   divider: {
     marginVertical: 10,
+  },
+  card: {
+    margin: 10,
   },
 });

@@ -20,6 +20,7 @@ const MAPPING = {
   'chevron.right': 'chevron-right',
   'pencil': 'edit',
   'gearshape.fill': 'settings',
+  'camera.fill': 'photo-camera',
 } as any;
 
 /**

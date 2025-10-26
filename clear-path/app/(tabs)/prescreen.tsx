@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
-import { StyleSheet, Alert, View, ScrollView } from 'react-native';
+import { StyleSheet, Alert, View, ScrollView, Modal } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { TextInput, Button, Text } from 'react-native-paper';
 import { useTheme } from '@/contexts/theme-context';
+import CameraComponent from '@/components/camera-view';
+import Avatar from '@/components/avatar';
+import { decode } from 'base64-arraybuffer';
+import * as FileSystem from 'expo-file-system';
 
 export default function FormScreen() {
   const [firstName, setFirstName] = useState('');
@@ -10,12 +14,36 @@ export default function FormScreen() {
   const [phone, setPhone] = useState('');
   const [age, setAge] = useState('');
   const [gender, setGender] = useState('');
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [cameraVisible, setCameraVisible] = useState(false);
   const { theme } = useTheme();
+
+  const handlePictureTaken = async (uri: string) => {
+    setPhotoUri(uri);
+    setCameraVisible(false);
+  };
 
   const handleSubmit = async () => {
     if (!firstName.trim() || !lastName.trim()) {
       Alert.alert('Error', 'Please enter a first and last name.');
       return;
+    }
+
+    let photoUrl: string | null = null;
+    if (photoUri) {
+      const base64 = await FileSystem.readAsStringAsync(photoUri, { encoding: 'base64' });
+      const filePath = `${new Date().getTime()}.jpg`;
+      const { data, error } = await supabase.storage
+        .from('patient_assets')
+        .upload(filePath, decode(base64), { contentType: 'image/jpeg' });
+
+      if (error) {
+        Alert.alert('Error uploading image', error.message);
+        return;
+      }
+      
+      const { data: { publicUrl } } = supabase.storage.from('patient_assets').getPublicUrl(filePath);
+      photoUrl = publicUrl;
     }
 
     const { data, error } = await supabase.from('Patients').insert([
@@ -25,6 +53,7 @@ export default function FormScreen() {
         phone: phone.trim(),
         age: parseInt(age, 10) || null,
         gender: gender.trim(),
+        portrait_url: photoUrl,
       },
     ]);
 
@@ -37,6 +66,7 @@ export default function FormScreen() {
       setPhone('');
       setAge('');
       setGender('');
+      setPhotoUri(null);
     }
   };
 
@@ -47,7 +77,20 @@ export default function FormScreen() {
 
   return (
     <ScrollView style={{backgroundColor: theme.colors.background}} contentContainerStyle={styles.container}>
+      <Modal
+        animationType="slide"
+        transparent={false}
+        visible={cameraVisible}
+        onRequestClose={() => {
+          setCameraVisible(!cameraVisible);
+        }}>
+        <CameraComponent onPictureTaken={handlePictureTaken} />
+      </Modal>
+
       <Text style={styles.title}>Prescreening Form</Text>
+
+      <Avatar uri={photoUri} onPress={() => setCameraVisible(true)} />
+
       <TextInput
         label="First Name"
         value={firstName}
@@ -109,5 +152,6 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 10,
+    marginBottom: 20,
   },
 });

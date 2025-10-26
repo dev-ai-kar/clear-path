@@ -1,13 +1,14 @@
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, ActivityIndicator, Image } from 'react-native';
-import { Text } from 'react-native-paper';
+import { Text, Button } from 'react-native-paper';
 import { supabase } from '@/lib/supabase';
 import { useTheme } from '@/contexts/theme-context';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 
 export default function PatientDetailScreen() {
   const { id } = useLocalSearchParams();
+  const router = useRouter();
   const { theme } = useTheme();
   const [patient, setPatient] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -62,6 +63,13 @@ export default function PatientDetailScreen() {
           <Text variant="titleMedium" style={{ color: theme.colors.onSurface }}>Phone: {patient.phone}</Text>
           <Text variant="titleMedium" style={{ color: theme.colors.onSurface }}>Age: {patient.age}</Text>
           <Text variant="titleMedium" style={{ color: theme.colors.onSurface }}>Gender: {patient.gender}</Text>
+          <Button
+            mode="contained"
+            onPress={() => router.push({ pathname: '/(tabs)/explore', params: { patient: JSON.stringify(patient) } })}
+            style={styles.button}
+          >
+            Start Screening
+          </Button>
         </View>
       </ParallaxScrollView>
     </>
@@ -84,5 +92,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 20,
     textAlign: 'center',
+  },
+  button: {
+    marginTop: 20,
   },
 });

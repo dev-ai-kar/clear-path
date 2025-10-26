@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { StyleSheet, Alert, View, ScrollView, Modal } from 'react-native';
+import { StyleSheet, Alert, ScrollView, Modal, View } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { TextInput, Button, Text } from 'react-native-paper';
 import { useTheme } from '@/contexts/theme-context';
 import CameraComponent from '@/components/camera-view';
 import Avatar from '@/components/avatar';
-import { decode } from 'base64-arraybuffer';
-import * as FileSystem from 'expo-file-system';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function FormScreen() {
   const [firstName, setFirstName] = useState('');
@@ -31,11 +30,17 @@ export default function FormScreen() {
 
     let photoUrl: string | null = null;
     if (photoUri) {
-      const base64 = await FileSystem.readAsStringAsync(photoUri, { encoding: 'base64' });
+      const formData = new FormData();
+      formData.append('file', {
+        uri: photoUri,
+        name: 'photo.jpg',
+        type: 'image/jpeg',
+      } as any);
+
       const filePath = `${new Date().getTime()}.jpg`;
       const { data, error } = await supabase.storage
         .from('patient_assets')
-        .upload(filePath, decode(base64), { contentType: 'image/jpeg' });
+        .upload(filePath, formData);
 
       if (error) {
         Alert.alert('Error uploading image', error.message);
@@ -46,7 +51,7 @@ export default function FormScreen() {
       photoUrl = publicUrl;
     }
 
-    const { data, error } = await supabase.from('Patients').insert([
+    const { data, error } = await supabase.from('patients').insert([
       {
         first_name: firstName.trim(),
         last_name: lastName.trim(),
@@ -70,15 +75,11 @@ export default function FormScreen() {
     }
   };
 
-  const containerStyle = {
-    ...styles.container,
-    backgroundColor: theme.colors.background,
-  };
-
   return (
-    <ScrollView style={{backgroundColor: theme.colors.background}} contentContainerStyle={styles.container}>
-      <Modal
-        animationType="slide"
+    <SafeAreaView style={{flex: 1, backgroundColor: theme.colors.background}}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Modal
+          animationType="slide"
         transparent={false}
         visible={cameraVisible}
         onRequestClose={() => {
@@ -131,7 +132,8 @@ export default function FormScreen() {
       <Button mode="contained" onPress={handleSubmit} style={styles.button}>
         Submit
       </Button>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 

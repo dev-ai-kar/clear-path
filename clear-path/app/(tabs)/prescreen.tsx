@@ -164,12 +164,12 @@ export default function FormScreen() {
                   selectedValue={tempGender}
                   onValueChange={(itemValue) => setTempGender(itemValue)}
                 >
-                  <Picker.Item label="Select Gender..." value="" color="#8e8e93" />
-                  <Picker.Item label="Male" value="Male" color="black" />
-                  <Picker.Item label="Female" value="Female" color="black" />
-                  <Picker.Item label="Non-binary" value="Non-binary" color="black" />
-                  <Picker.Item label="Prefer not to say" value="Prefer not to say" color="black" />
-                  <Picker.Item label="Other" value="Other" color="black" />
+                  <Picker.Item label="Select Gender..." value="" />
+                  <Picker.Item label="Male" value="Male" />
+                  <Picker.Item label="Female" value="Female" />
+                  <Picker.Item label="Non-binary" value="Non-binary" />
+                  <Picker.Item label="Prefer not to say" value="Prefer not to say" />
+                  <Picker.Item label="Other" value="Other" />
                 </Picker>
               </View>
             </View>
@@ -180,7 +180,7 @@ export default function FormScreen() {
           <Picker
             selectedValue={gender}
             onValueChange={(itemValue: string) => setGender(itemValue)}
-            style={{ flex: 1 }}
+            style={{ flex: 1, color: theme.colors.onSurface }}
           >
             <Picker.Item label="Select Gender..." value="" />
             <Picker.Item label="Male" value="Male" />

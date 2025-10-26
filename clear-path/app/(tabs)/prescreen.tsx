@@ -14,6 +14,9 @@ export default function FormScreen() {
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
   const [age, setAge] = useState('');
+  const [nationalId, setNationalId] = useState('');
+  const [patientCode, setPatientCode] = useState('');
+  const [otherAilments, setOtherAilments] = useState('');
   const [gender, setGender] = useState('');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [cameraVisible, setCameraVisible] = useState(false);
@@ -63,6 +66,9 @@ export default function FormScreen() {
         age: parseInt(age, 10) || null,
         gender: gender.trim(),
         portrait_url: photoUrl,
+        national_id: nationalId.trim(),
+        patient_code: patientCode.trim(),
+        other_ailments: otherAilments.trim(),
       },
     ]);
 
@@ -75,6 +81,9 @@ export default function FormScreen() {
       setPhone('');
       setAge('');
       setGender('');
+      setNationalId('');
+      setPatientCode('');
+      setOtherAilments('');
       setPhotoUri(null);
     }
   };
@@ -182,6 +191,29 @@ export default function FormScreen() {
           </Picker>
         </View>
       )}
+            <TextInput
+        label="National ID"
+        value={nationalId}
+        onChangeText={setNationalId}
+        style={styles.input}
+        mode="outlined"
+      />
+      <TextInput
+        label="Patient Code"
+        value={patientCode}
+        onChangeText={setPatientCode}
+        style={styles.input}
+        mode="outlined"
+      />
+      <TextInput
+        label="Other Ailments"
+        value={otherAilments}
+        onChangeText={setOtherAilments}
+        style={styles.input}
+        mode="outlined"
+        multiline
+        numberOfLines={3}
+      />
       <Button mode="contained" onPress={handleSubmit} style={styles.button}>
         Submit
       </Button>

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, ScrollView, View, Alert, Image } from 'react-native';
-import { TextInput, Button, Text, Chip } from 'react-native-paper';
+import { TextInput, Button, Text, Chip, TouchableRipple, Icon } from 'react-native-paper';
 import { Picker } from '@react-native-picker/picker';
+import { Platform, Modal } from 'react-native';
 import { useTheme } from '@/contexts/theme-context';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '@/lib/supabase';
@@ -29,6 +30,8 @@ export default function ScreeningForm() {
   const [otherDiagnoses, setOtherDiagnoses] = useState('');
   const [sites, setSites] = useState<any[]>([]);
   const [selectedSite, setSelectedSite] = useState<string | null>(null);
+  const [sitePickerVisible, setSitePickerVisible] = useState(false);
+  const [tempSite, setTempSite] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
   const [showErrors, setShowErrors] = useState(false);
 
@@ -46,12 +49,12 @@ export default function ScreeningForm() {
   const corneaOpts = ["clear", "scar", "ulcer", "edema", "keratitis", "other"] as const;
   const retinaOpts = ["normal", "mild NPDR", "moderate NPDR", "severe NPDR", "PDR", "AMD", "retinal detachment", "macular edema", "other"] as const;
 
-  const [lLens, setLLens] = useState<string | null>(null);
-  const [rLens, setRLens] = useState<string | null>(null);
-  const [lCornea, setLCornea] = useState<string | null>(null);
-  const [rCornea, setRCornea] = useState<string | null>(null);
-  const [lRetina, setLRetina] = useState<string | null>(null);
-  const [rRetina, setRRetina] = useState<string | null>(null);
+  const [lLens, setLLens] = useState<string[]>([]);
+  const [rLens, setRLens] = useState<string[]>([]);
+  const [lCornea, setLCornea] = useState<string[]>([]);
+  const [rCornea, setRCornea] = useState<string[]>([]);
+  const [lRetina, setLRetina] = useState<string[]>([]);
+  const [rRetina, setRRetina] = useState<string[]>([]);
 
   const [lLensOther, setLLensOther] = useState('');
   const [rLensOther, setRLensOther] = useState('');
@@ -59,6 +62,36 @@ export default function ScreeningForm() {
   const [rCorneaOther, setRCorneaOther] = useState('');
   const [lRetinaOther, setLRetinaOther] = useState('');
   const [rRetinaOther, setRRetinaOther] = useState('');
+
+  const clearForm = () => {
+    setScreenDoc(null);
+    setSelectedDiagnoses([]);
+    setOtherDiagnoses('');
+    setSelectedSite(null);
+    setTempSite(null);
+    setNotes('');
+    setShowErrors(false);
+    setLIOP('');
+    setRIOP('');
+    setLCDR('');
+    setRCDR('');
+    setLVAsc('');
+    setRVAsc('');
+    setLVAcc('');
+    setRVAcc('');
+    setLLens([]);
+    setRLens([]);
+    setLCornea([]);
+    setRCornea([]);
+    setLRetina([]);
+    setRRetina([]);
+    setLLensOther('');
+    setRLensOther('');
+    setLCorneaOther('');
+    setRCorneaOther('');
+    setLRetinaOther('');
+    setRRetinaOther('');
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -92,9 +125,9 @@ export default function ScreeningForm() {
     const diagTokens = otherDiagnoses.split(',').map(s => s.trim()).filter(Boolean);
     const hasAnyDiagnosis = selectedDiagnoses.length > 0 || diagTokens.length > 0;
     const siteMissing = !selectedSite;
-    const lensOtherMissing = (lLens === 'other' && !lLensOther.trim()) || (rLens === 'other' && !rLensOther.trim());
-    const corneaOtherMissing = (lCornea === 'other' && !lCorneaOther.trim()) || (rCornea === 'other' && !rCorneaOther.trim());
-    const retinaOtherMissing = (lRetina === 'other' && !lRetinaOther.trim()) || (rRetina === 'other' && !rRetinaOther.trim());
+    const lensOtherMissing = (lLens.includes('other') && !lLensOther.trim()) || (rLens.includes('other') && !rLensOther.trim());
+    const corneaOtherMissing = (lCornea.includes('other') && !lCorneaOther.trim()) || (rCornea.includes('other') && !rCorneaOther.trim());
+    const retinaOtherMissing = (lRetina.includes('other') && !lRetinaOther.trim()) || (rRetina.includes('other') && !rRetinaOther.trim());
 
     if (!hasAnyDiagnosis || siteMissing || lensOtherMissing || corneaOtherMissing || retinaOtherMissing) {
       setShowErrors(true);
@@ -146,18 +179,19 @@ export default function ScreeningForm() {
       iop_right: parseInt(rIOP, 10) || null,
       cdr_left: parseFloat(lCDR) || null,
       cdr_right: parseFloat(rCDR) || null,
-      lens_left: lLens === 'other' ? lLensOther : lLens,
-      lens_right: rLens === 'other' ? rLensOther : rLens,
-      cornea_left: lCornea === 'other' ? lCorneaOther : lCornea,
-      cornea_right: rCornea === 'other' ? rCorneaOther : rCornea,
-      retina_left: lRetina === 'other' ? lRetinaOther : lRetina,
-      retina_right: rRetina === 'other' ? rRetinaOther : rRetina,
+      lens_left: lLens.includes('other') ? lLens.filter(l => l !== 'other').concat(lLensOther).join(', ') : lLens.join(', '),
+      lens_right: rLens.includes('other') ? rLens.filter(l => l !== 'other').concat(rLensOther).join(', ') : rLens.join(', '),
+      cornea_left: lCornea.includes('other') ? lCornea.filter(l => l !== 'other').concat(lCorneaOther).join(', ') : lCornea.join(', '),
+      cornea_right: rCornea.includes('other') ? rCornea.filter(l => l !== 'other').concat(rCorneaOther).join(', ') : rCornea.join(', '),
+      retina_left: lRetina.includes('other') ? lRetina.filter(l => l !== 'other').concat(lRetinaOther).join(', ') : lRetina.join(', '),
+      retina_right: rRetina.includes('other') ? rRetina.filter(l => l !== 'other').concat(rRetinaOther).join(', ') : rRetina.join(', '),
     }]);
 
     if (screeningError) {
       Alert.alert('Error creating screening', screeningError.message);
     } else {
       Alert.alert('Success', 'Screening has been submitted.');
+      clearForm();
       router.push('/(tabs)');
     }
   };
@@ -201,27 +235,67 @@ export default function ScreeningForm() {
           error={showErrors && selectedDiagnoses.length === 0 && otherDiagnoses.trim().length === 0}
         />
 
-        <View style={[styles.input, styles.pickerContainer, { borderColor: theme.colors.outline }]}>
-          <Picker
-            selectedValue={selectedSite}
-            onValueChange={(itemValue) => setSelectedSite(itemValue)}
-            style={{ flex: 1 }}
-          >
-            <Picker.Item label="Select Site..." value={null} />
-            {sites.map(site => (
-              <Picker.Item key={site.site_id} label={site.name} value={site.site_id} />
-            ))}
-          </Picker>
-        </View>
+        {Platform.OS === 'ios' ? (
+          <>
+            <TouchableRipple onPress={() => setSitePickerVisible(true)}>
+              <View style={[styles.input, styles.pickerContainer, { borderColor: theme.colors.outline }]}>
+                <Text style={{ color: selectedSite ? theme.colors.onSurface : theme.colors.onSurfaceVariant, flex: 1 }}>
+                  {sites.find(site => site.site_id === selectedSite)?.name || 'Select Site...'}
+                </Text>
+                <Icon source="chevron-down" size={24} color={theme.colors.onSurfaceVariant} />
+              </View>
+            </TouchableRipple>
+            <Modal
+              visible={sitePickerVisible}
+              transparent={true}
+              animationType="slide"
+              onRequestClose={() => setSitePickerVisible(false)}
+            >
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <View style={styles.modalHeader}>
+                    <Button onPress={() => setSitePickerVisible(false)}>Cancel</Button>
+                    <Button onPress={() => {
+                      setSelectedSite(tempSite);
+                      setSitePickerVisible(false);
+                    }}>Done</Button>
+                  </View>
+                  <Picker
+                    selectedValue={tempSite}
+                    onValueChange={(itemValue) => setTempSite(itemValue)}
+                  >
+                    <Picker.Item label="Select Site..." value="" color="#8e8e93" />
+                    {sites.map(site => (
+                      <Picker.Item key={site.site_id} label={site.name} value={site.site_id} color="black" />
+                    ))}
+                  </Picker>
+                </View>
+              </View>
+            </Modal>
+          </>
+        ) : (
+          <View style={[styles.input, styles.pickerContainer, { borderColor: theme.colors.outline }]}>
+            <Picker
+              selectedValue={selectedSite}
+              onValueChange={(itemValue) => setSelectedSite(itemValue)}
+              style={{ flex: 1 }}
+            >
+              <Picker.Item label="Select Site..." value="" />
+              {sites.map(site => (
+                <Picker.Item key={site.site_id} label={site.name} value={site.site_id} />
+              ))}
+            </Picker>
+          </View>
+        )}
 
         <Text style={styles.sectionTitle}>Visual Acuity (Snellen)</Text>
         <View style={styles.row}>
-          <TextInput label="Left Distance SC" value={lVAsc} onChangeText={setLVAsc} style={styles.input} mode="outlined" />
-          <TextInput label="Right Distance SC" value={rVAsc} onChangeText={setRVAsc} style={styles.input} mode="outlined" />
+          <TextInput label="Left Distance SC" value={lVAsc} onChangeText={setLVAsc} style={styles.input} mode="outlined" placeholder="e.g., 6/18" />
+          <TextInput label="Right Distance SC" value={rVAsc} onChangeText={setRVAsc} style={styles.input} mode="outlined" placeholder="e.g., 6/18" />
         </View>
         <View style={styles.row}>
-          <TextInput label="Left Distance CC" value={lVAcc} onChangeText={setLVAcc} style={styles.input} mode="outlined" />
-          <TextInput label="Right Distance CC" value={rVAcc} onChangeText={setRVAcc} style={styles.input} mode="outlined" />
+          <TextInput label="Left Distance CC" value={lVAcc} onChangeText={setLVAcc} style={styles.input} mode="outlined" placeholder="e.g., 6/12" />
+          <TextInput label="Right Distance CC" value={rVAcc} onChangeText={setRVAcc} style={styles.input} mode="outlined" placeholder="e.g., 6/12" />
         </View>
 
         <Text style={styles.sectionTitle}>IOP (mmHg) & CDR</Text>
@@ -237,27 +311,27 @@ export default function ScreeningForm() {
         <Text style={styles.sectionTitle}>Segment Status</Text>
         <Text style={styles.subSectionTitle}>Lens</Text>
         <View style={styles.chipContainer}>
-          {lensOpts.map(opt => <Chip key={`ll_${opt}`} selected={lLens === opt} onPress={() => setLLens(opt)} style={styles.chip}>L: {opt}</Chip>)}
-          {lensOpts.map(opt => <Chip key={`rl_${opt}`} selected={rLens === opt} onPress={() => setRLens(opt)} style={styles.chip}>R: {opt}</Chip>)}
+          {lensOpts.map(opt => <Chip key={`ll_${opt}`} selected={lLens.includes(opt)} onPress={() => setLLens(prev => prev.includes(opt) ? prev.filter(item => item !== opt) : [...prev, opt])} style={styles.chip}>L: {opt}</Chip>)}
+          {lensOpts.map(opt => <Chip key={`rl_${opt}`} selected={rLens.includes(opt)} onPress={() => setRLens(prev => prev.includes(opt) ? prev.filter(item => item !== opt) : [...prev, opt])} style={styles.chip}>R: {opt}</Chip>)}
         </View>
-        {lLens === 'other' && <TextInput label="Left Lens Other (*)" value={lLensOther} onChangeText={setLLensOther} style={styles.input} mode="outlined" error={showErrors && !lLensOther.trim()} />}
-        {rLens === 'other' && <TextInput label="Right Lens Other (*)" value={rLensOther} onChangeText={setRLensOther} style={styles.input} mode="outlined" error={showErrors && !rLensOther.trim()} />}
+        {lLens.includes('other') && <TextInput label="Left Lens Other (*)" value={lLensOther} onChangeText={setLLensOther} style={styles.input} mode="outlined" error={showErrors && !lLensOther.trim()} />}
+        {rLens.includes('other') && <TextInput label="Right Lens Other (*)" value={rLensOther} onChangeText={setRLensOther} style={styles.input} mode="outlined" error={showErrors && !rLensOther.trim()} />}
 
         <Text style={styles.subSectionTitle}>Cornea</Text>
         <View style={styles.chipContainer}>
-          {corneaOpts.map(opt => <Chip key={`lc_${opt}`} selected={lCornea === opt} onPress={() => setLCornea(opt)} style={styles.chip}>L: {opt}</Chip>)}
-          {corneaOpts.map(opt => <Chip key={`rc_${opt}`} selected={rCornea === opt} onPress={() => setRCornea(opt)} style={styles.chip}>R: {opt}</Chip>)}
+          {corneaOpts.map(opt => <Chip key={`lc_${opt}`} selected={lCornea.includes(opt)} onPress={() => setLCornea(prev => prev.includes(opt) ? prev.filter(item => item !== opt) : [...prev, opt])} style={styles.chip}>L: {opt}</Chip>)}
+          {corneaOpts.map(opt => <Chip key={`rc_${opt}`} selected={rCornea.includes(opt)} onPress={() => setRCornea(prev => prev.includes(opt) ? prev.filter(item => item !== opt) : [...prev, opt])} style={styles.chip}>R: {opt}</Chip>)}
         </View>
-        {lCornea === 'other' && <TextInput label="Left Cornea Other (*)" value={lCorneaOther} onChangeText={setLCorneaOther} style={styles.input} mode="outlined" error={showErrors && !lCorneaOther.trim()} />}
-        {rCornea === 'other' && <TextInput label="Right Cornea Other (*)" value={rCorneaOther} onChangeText={setRCorneaOther} style={styles.input} mode="outlined" error={showErrors && !rCorneaOther.trim()} />}
+        {lCornea.includes('other') && <TextInput label="Left Cornea Other (*)" value={lCorneaOther} onChangeText={setLCorneaOther} style={styles.input} mode="outlined" error={showErrors && !lCorneaOther.trim()} />}
+        {rCornea.includes('other') && <TextInput label="Right Cornea Other (*)" value={rCorneaOther} onChangeText={setRCorneaOther} style={styles.input} mode="outlined" error={showErrors && !rCorneaOther.trim()} />}
 
         <Text style={styles.subSectionTitle}>Retina</Text>
         <View style={styles.chipContainer}>
-          {retinaOpts.map(opt => <Chip key={`lr_${opt}`} selected={lRetina === opt} onPress={() => setLRetina(opt)} style={styles.chip}>L: {opt}</Chip>)}
-          {retinaOpts.map(opt => <Chip key={`rr_${opt}`} selected={rRetina === opt} onPress={() => setRRetina(opt)} style={styles.chip}>R: {opt}</Chip>)}
+          {retinaOpts.map(opt => <Chip key={`lr_${opt}`} selected={lRetina.includes(opt)} onPress={() => setLRetina(prev => prev.includes(opt) ? prev.filter(item => item !== opt) : [...prev, opt])} style={styles.chip}>L: {opt}</Chip>)}
+          {retinaOpts.map(opt => <Chip key={`rr_${opt}`} selected={rRetina.includes(opt)} onPress={() => setRRetina(prev => prev.includes(opt) ? prev.filter(item => item !== opt) : [...prev, opt])} style={styles.chip}>R: {opt}</Chip>)}
         </View>
-        {lRetina === 'other' && <TextInput label="Left Retina Other (*)" value={lRetinaOther} onChangeText={setLRetinaOther} style={styles.input} mode="outlined" error={showErrors && !lRetinaOther.trim()} />}
-        {rRetina === 'other' && <TextInput label="Right Retina Other (*)" value={rRetinaOther} onChangeText={setRRetinaOther} style={styles.input} mode="outlined" error={showErrors && !rRetinaOther.trim()} />}
+        {lRetina.includes('other') && <TextInput label="Left Retina Other (*)" value={lRetinaOther} onChangeText={setLRetinaOther} style={styles.input} mode="outlined" error={showErrors && !lRetinaOther.trim()} />}
+        {rRetina.includes('other') && <TextInput label="Right Retina Other (*)" value={rRetinaOther} onChangeText={setRRetinaOther} style={styles.input} mode="outlined" error={showErrors && !rRetinaOther.trim()} />}
 
         <Text style={styles.sectionTitle}>Notes</Text>
         <TextInput label="Notes" value={notes} onChangeText={setNotes} multiline numberOfLines={4} style={styles.input} mode="outlined" />
@@ -280,6 +354,26 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     justifyContent: 'center',
     height: 56,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingBottom: 10,
   },
   title: {
     fontSize: 22,

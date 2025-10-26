@@ -278,7 +278,7 @@ export default function ScreeningForm() {
             <Picker
               selectedValue={selectedSite}
               onValueChange={(itemValue) => setSelectedSite(itemValue)}
-              style={{ flex: 1 }}
+              style={Platform.select({ web: { height: 56, backgroundColor: 'transparent' }, default: { flex: 1 } })}
             >
               <Picker.Item label="Select Site..." value="" />
               {sites.map(site => (

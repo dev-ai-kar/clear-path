@@ -19,7 +19,7 @@ const MAPPING = {
   'chevron.left.forwardslash.chevron.right': 'code',
   'chevron.right': 'chevron-right',
   'pencil': 'edit',
-  'cog': 'settings',
+  'gearshape.fill': 'settings',
 } as any;
 
 /**

@@ -115,23 +115,17 @@ export default function ScreeningForm() {
 
     const allDiagnoses = [...new Set([...selectedDiagnoses, ...diagTokens])];
     
-    const existingDbDiagnoses = diagnoses.map(d => d.name);
-    const newDiagnosisNames = allDiagnoses.filter(d => !existingDbDiagnoses.includes(d));
+    const diagnosisIds = await Promise.all(
+      allDiagnoses.map(name =>
+        supabase.rpc('get_or_create_diagnosis', { p_name: name })
+      )
+    );
 
-    let newDiagnoses: any[] = [];
-    if (newDiagnosisNames.length > 0) {
-      const { data, error } = await supabase.from('diagnoses').insert(newDiagnosisNames.map(name => ({ name }))).select();
-      if (error) {
-        Alert.alert('Error creating new diagnoses', error.message);
-        return;
+    const visitDiagnoses = diagnosisIds.map(rpcResponse => {
+      if (rpcResponse.error) {
+        throw new Error(`Error getting or creating diagnosis: ${rpcResponse.error.message}`);
       }
-      newDiagnoses = data;
-    }
-
-    const allDbDiagnoses = [...diagnoses, ...newDiagnoses];
-    const visitDiagnoses = allDiagnoses.map(diagnosisName => {
-        const diagnosis = allDbDiagnoses.find(d => d.name === diagnosisName);
-        return { visit_id: visitData.visit_id, diagnosis_id: diagnosis!.diagnosis_id };
+      return { visit_id: visitData.visit_id, diagnosis_id: rpcResponse.data };
     });
 
     if (visitDiagnoses.length > 0) {

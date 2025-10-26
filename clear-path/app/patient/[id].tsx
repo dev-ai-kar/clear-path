@@ -30,7 +30,7 @@ export default function PatientDetailScreen() {
 
       const { data: visitsData, error: visitsError } = await supabase
         .from('visits')
-        .select('*, screenings(*), visit_diagnoses(diagnoses(name))')
+        .select('*, screenings(*), visit_diagnoses(diagnoses(name)), attachments(*)')
         .eq('patient_id', id);
 
       if (visitsError) {
@@ -113,6 +113,17 @@ export default function PatientDetailScreen() {
                     <Divider style={styles.divider} />
                     <Title>Notes</Title>
                     <Text>{visit.notes}</Text>
+                    {visit.attachments && visit.attachments.length > 0 && (
+                      <>
+                        <Divider style={styles.divider} />
+                        <Title>Attachments</Title>
+                        {visit.attachments.map((att: any) => (
+                          <Button key={att.attachment_id} onPress={() => Linking.openURL(att.file_url)}>
+                            View Attachment
+                          </Button>
+                        ))}
+                      </>
+                    )}
                   </View>
                 ) : (
                   <Text style={styles.screeningContainer}>No screening data for this visit.</Text>

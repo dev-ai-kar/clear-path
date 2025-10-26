@@ -146,6 +146,36 @@ export default function ScreeningForm() {
       return;
     }
 
+    if (screenDoc) {
+      const formData = new FormData();
+      formData.append('file', {
+        uri: screenDoc.uri,
+        name: screenDoc.name,
+        type: screenDoc.mimeType,
+      } as any);
+
+      const filePath = `${new Date().getTime()}_${screenDoc.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from('patient_assets')
+        .upload(filePath, formData);
+
+      if (uploadError) {
+        Alert.alert('Error uploading document', uploadError.message);
+        return;
+      }
+
+      const { data: { publicUrl } } = supabase.storage.from('patient_assets').getPublicUrl(filePath);
+
+      const { error: attachmentError } = await supabase.from('attachments').insert([
+        { visit_id: visitData.visit_id, file_url: publicUrl },
+      ]);
+
+      if (attachmentError) {
+        Alert.alert('Error saving attachment', attachmentError.message);
+        return;
+      }
+    }
+
     const allDiagnoses = [...new Set([...selectedDiagnoses, ...diagTokens])];
     
     const diagnosisIds = await Promise.all(

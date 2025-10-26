@@ -21,6 +21,7 @@ const MAPPING = {
   'pencil': 'edit',
   'gearshape.fill': 'settings',
   'camera.fill': 'photo-camera',
+  'person.3.fill': 'people',
 } as any;
 
 /**

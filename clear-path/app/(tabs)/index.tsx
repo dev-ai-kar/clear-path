@@ -15,7 +15,7 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       const fetchPatients = async () => {
-        const { data, error } = await supabase.from('patients').select('*');
+        const { data, error } = await supabase.from('patients').select('*').order('created_at', { ascending: false });
         if (error) {
           console.error(error);
         } else {

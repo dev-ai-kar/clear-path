@@ -46,7 +46,7 @@ export default function FormScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView style={{backgroundColor: theme.colors.background}} contentContainerStyle={styles.container}>
       <Text style={styles.title}>Prescreening Form</Text>
       <TextInput
         label="First Name"

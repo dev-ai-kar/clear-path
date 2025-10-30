@@ -2,7 +2,7 @@
 
 ## Project Goal
 
-Clear Path is a mobile application designed to streamline the patient prescreening process for eye care camps in underserved communities. The app allows healthcare workers to quickly capture patient demographics, basic medical history, and a photo, and then save this information to a central database. This provides a simple, efficient, and offline-capable solution for managing patient data in low-resource settings.
+Clear Path is a mobile application designed to streamline the patient prescreening process for eye care camps in underserved communities. The app will allow healthcare workers to quickly capture patient demographics, basic medical history, and a photo, and then save this information to a central database. This provides a simple, efficient, and offline-capable solution for managing patient data in low-resource settings.
 
 ## Database Schema
 

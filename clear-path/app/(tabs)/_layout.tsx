@@ -19,6 +19,13 @@ export default function TabLayout() {
         },
       }}>
       <Tabs.Screen
+        name="prescreen"
+        options={{
+          title: 'Prescreen',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="pencil" color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="index"
         options={{
           title: 'Patients',
@@ -29,15 +36,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="explore"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="prescreen"
-        options={{
-          title: 'Prescreen',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="pencil" color={color} />,
+          title: 'Screening',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="clipboard.fill" color={color} />,
         }}
       />
       <Tabs.Screen

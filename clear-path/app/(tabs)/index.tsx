@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { StyleSheet, View, FlatList, ActivityIndicator } from 'react-native';
 import { Text, List } from 'react-native-paper';
-import { Link } from 'expo-router';
+import { Link, useFocusEffect } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useTheme } from '@/contexts/theme-context';
 import Avatar from '@/components/avatar';
@@ -12,19 +12,21 @@ export default function HomeScreen() {
   const [patients, setPatients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchPatients = async () => {
-      const { data, error } = await supabase.from('patients').select('*');
-      if (error) {
-        console.error(error);
-      } else {
-        setPatients(data);
-      }
-      setLoading(false);
-    };
+  useFocusEffect(
+    useCallback(() => {
+      const fetchPatients = async () => {
+        const { data, error } = await supabase.from('patients').select('*').order('created_at', { ascending: false });
+        if (error) {
+          console.error(error);
+        } else {
+          setPatients(data);
+        }
+        setLoading(false);
+      };
 
-    fetchPatients();
-  }, []);
+      fetchPatients();
+    }, [])
+  );
 
   if (loading) {
     return (

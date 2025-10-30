@@ -1,7 +1,9 @@
+
 import React, { useState } from 'react';
-import { StyleSheet, Alert, ScrollView, Modal, View } from 'react-native';
+import { StyleSheet, Alert, ScrollView, Modal, View, Platform } from 'react-native';
 import { supabase } from '@/lib/supabase';
-import { TextInput, Button, Text } from 'react-native-paper';
+import { Picker } from '@react-native-picker/picker';
+import { TextInput, Button, Text, TouchableRipple, Icon } from 'react-native-paper';
 import { useTheme } from '@/contexts/theme-context';
 import CameraComponent from '@/components/camera-view';
 import Avatar from '@/components/avatar';
@@ -12,9 +14,14 @@ export default function FormScreen() {
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
   const [age, setAge] = useState('');
+  const [nationalId, setNationalId] = useState('');
+  const [patientCode, setPatientCode] = useState('');
+  const [otherAilments, setOtherAilments] = useState('');
   const [gender, setGender] = useState('');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [cameraVisible, setCameraVisible] = useState(false);
+  const [pickerVisible, setPickerVisible] = useState(false);
+  const [tempGender, setTempGender] = useState(gender);
   const { theme } = useTheme();
 
   const handlePictureTaken = async (uri: string) => {
@@ -59,6 +66,9 @@ export default function FormScreen() {
         age: parseInt(age, 10) || null,
         gender: gender.trim(),
         portrait_url: photoUrl,
+        national_id: nationalId.trim(),
+        patient_code: patientCode.trim(),
+        other_ailments: otherAilments.trim(),
       },
     ]);
 
@@ -71,6 +81,9 @@ export default function FormScreen() {
       setPhone('');
       setAge('');
       setGender('');
+      setNationalId('');
+      setPatientCode('');
+      setOtherAilments('');
       setPhotoUri(null);
     }
   };
@@ -122,12 +135,84 @@ export default function FormScreen() {
         mode="outlined"
         keyboardType="number-pad"
       />
-      <TextInput
-        label="Gender"
-        value={gender}
-        onChangeText={setGender}
+      {Platform.OS === 'ios' ? (
+        <>
+          <TouchableRipple onPress={() => setPickerVisible(true)}>
+            <View style={[styles.input, styles.pickerContainer, { borderColor: theme.colors.outline }]}>
+              <Text style={{ color: gender ? theme.colors.onSurface : theme.colors.onSurfaceVariant, flex: 1 }}>
+                {gender || 'Select Gender...'}
+              </Text>
+              <Icon source="chevron-down" size={24} color={theme.colors.onSurfaceVariant} />
+            </View>
+          </TouchableRipple>
+          <Modal
+            visible={pickerVisible}
+            transparent={true}
+            animationType="slide"
+            onRequestClose={() => setPickerVisible(false)}
+          >
+            <View style={styles.modalContainer}>
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                  <Button onPress={() => setPickerVisible(false)}>Cancel</Button>
+                  <Button onPress={() => {
+                    setGender(tempGender);
+                    setPickerVisible(false);
+                  }}>Done</Button>
+                </View>
+                <Picker
+                  selectedValue={tempGender}
+                  onValueChange={(itemValue) => setTempGender(itemValue)}
+                >
+                  <Picker.Item label="Select Gender..." value="" />
+                  <Picker.Item label="Male" value="Male" />
+                  <Picker.Item label="Female" value="Female" />
+                  <Picker.Item label="Non-binary" value="Non-binary" />
+                  <Picker.Item label="Prefer not to say" value="Prefer not to say" />
+                  <Picker.Item label="Other" value="Other" />
+                </Picker>
+              </View>
+            </View>
+          </Modal>
+        </>
+      ) : (
+        <View style={[styles.input, styles.pickerContainer, { borderColor: theme.colors.outline }]}>
+          <Picker
+            selectedValue={gender}
+            onValueChange={(itemValue: string) => setGender(itemValue)}
+            style={{ flex: 1, color: theme.colors.onSurface }}
+          >
+            <Picker.Item label="Select Gender..." value="" />
+            <Picker.Item label="Male" value="Male" />
+            <Picker.Item label="Female" value="Female" />
+            <Picker.Item label="Non-binary" value="Non-binary" />
+            <Picker.Item label="Prefer not to say" value="Prefer not to say" />
+            <Picker.Item label="Other" value="Other" />
+          </Picker>
+        </View>
+      )}
+            <TextInput
+        label="National ID"
+        value={nationalId}
+        onChangeText={setNationalId}
         style={styles.input}
         mode="outlined"
+      />
+      <TextInput
+        label="Patient Code"
+        value={patientCode}
+        onChangeText={setPatientCode}
+        style={styles.input}
+        mode="outlined"
+      />
+      <TextInput
+        label="Other Ailments"
+        value={otherAilments}
+        onChangeText={setOtherAilments}
+        style={styles.input}
+        mode="outlined"
+        multiline
+        numberOfLines={3}
       />
       <Button mode="contained" onPress={handleSubmit} style={styles.button}>
         Submit
@@ -151,6 +236,32 @@ const styles = StyleSheet.create({
   },
   input: {
     marginBottom: 20,
+  },
+  pickerContainer: {
+    borderWidth: 1,
+    borderRadius: 4,
+    justifyContent: 'center',
+    height: 56, // Standard height for outlined TextInput
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingBottom: 10,
   },
   button: {
     marginTop: 10,

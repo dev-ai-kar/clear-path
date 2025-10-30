@@ -19,7 +19,9 @@ const MAPPING = {
   'chevron.left.forwardslash.chevron.right': 'code',
   'chevron.right': 'chevron-right',
   'pencil': 'edit',
-  'cog': 'settings',
+  'gearshape.fill': 'settings',
+  'camera.fill': 'photo-camera',
+  'person.3.fill': 'people',
 } as any;
 
 /**

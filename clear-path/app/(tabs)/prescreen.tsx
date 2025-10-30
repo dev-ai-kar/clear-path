@@ -1,65 +1,145 @@
 import React, { useState } from 'react';
-import { StyleSheet, Alert, View } from 'react-native';
+import { StyleSheet, Alert, ScrollView, Modal, View } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { TextInput, Button, Text } from 'react-native-paper';
 import { useTheme } from '@/contexts/theme-context';
+import CameraComponent from '@/components/camera-view';
+import Avatar from '@/components/avatar';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function FormScreen() {
-  const [name, setName] = useState('');
-  const [symbol, setSymbol] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [age, setAge] = useState('');
+  const [gender, setGender] = useState('');
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [cameraVisible, setCameraVisible] = useState(false);
   const { theme } = useTheme();
 
+  const handlePictureTaken = async (uri: string) => {
+    setPhotoUri(uri);
+    setCameraVisible(false);
+  };
+
   const handleSubmit = async () => {
-    if (!name.trim() || !symbol.trim()) {
-      Alert.alert('Error', 'Please enter a name and symbol.');
+    if (!firstName.trim() || !lastName.trim()) {
+      Alert.alert('Error', 'Please enter a first and last name.');
       return;
     }
 
-    const { data, error } = await supabase
-      .from('patients')
-      .insert([{ name: name.trim(), symbol_name: symbol.trim() }]);
+    let photoUrl: string | null = null;
+    if (photoUri) {
+      const formData = new FormData();
+      formData.append('file', {
+        uri: photoUri,
+        name: 'photo.jpg',
+        type: 'image/jpeg',
+      } as any);
+
+      const filePath = `${new Date().getTime()}.jpg`;
+      const { data, error } = await supabase.storage
+        .from('patient_assets')
+        .upload(filePath, formData);
+
+      if (error) {
+        Alert.alert('Error uploading image', error.message);
+        return;
+      }
+      
+      const { data: { publicUrl } } = supabase.storage.from('patient_assets').getPublicUrl(filePath);
+      photoUrl = publicUrl;
+    }
+
+    const { data, error } = await supabase.from('patients').insert([
+      {
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        phone: phone.trim(),
+        age: parseInt(age, 10) || null,
+        gender: gender.trim(),
+        portrait_url: photoUrl,
+      },
+    ]);
 
     if (error) {
       Alert.alert('Error', error.message);
     } else {
       Alert.alert('Success', 'Patient has been submitted.');
-      setName('');
-      setSymbol('');
+      setFirstName('');
+      setLastName('');
+      setPhone('');
+      setAge('');
+      setGender('');
+      setPhotoUri(null);
     }
   };
 
-  const containerStyle = {
-    ...styles.container,
-    backgroundColor: theme.colors.background,
-  };
-
   return (
-    <View style={containerStyle}>
+    <SafeAreaView style={{flex: 1, backgroundColor: theme.colors.background}}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Modal
+          animationType="slide"
+        transparent={false}
+        visible={cameraVisible}
+        onRequestClose={() => {
+          setCameraVisible(!cameraVisible);
+        }}>
+        <CameraComponent onPictureTaken={handlePictureTaken} />
+      </Modal>
+
       <Text style={styles.title}>Prescreening Form</Text>
+
+      <Avatar uri={photoUri} onPress={() => setCameraVisible(true)} />
+
       <TextInput
-        label="Patient's Name"
-        value={name}
-        onChangeText={setName}
+        label="First Name"
+        value={firstName}
+        onChangeText={setFirstName}
         style={styles.input}
         mode="outlined"
       />
       <TextInput
-        label="Symbol Name"
-        value={symbol}
-        onChangeText={setSymbol}
+        label="Last Name"
+        value={lastName}
+        onChangeText={setLastName}
+        style={styles.input}
+        mode="outlined"
+      />
+      <TextInput
+        label="Phone"
+        value={phone}
+        onChangeText={setPhone}
+        style={styles.input}
+        mode="outlined"
+        keyboardType="phone-pad"
+      />
+      <TextInput
+        label="Age"
+        value={age}
+        onChangeText={setAge}
+        style={styles.input}
+        mode="outlined"
+        keyboardType="number-pad"
+      />
+      <TextInput
+        label="Gender"
+        value={gender}
+        onChangeText={setGender}
         style={styles.input}
         mode="outlined"
       />
       <Button mode="contained" onPress={handleSubmit} style={styles.button}>
         Submit
       </Button>
-    </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
     padding: 20,
   },
@@ -74,5 +154,6 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 10,
+    marginBottom: 20,
   },
 });
